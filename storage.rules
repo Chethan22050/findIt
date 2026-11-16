@@ -1,0 +1,40 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    
+    // Check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Validate image format and maximum 5MB size
+    function isValidImage() {
+      return request.resource.contentType.matches('image/.*')
+        && request.resource.size < 5 * 1024 * 1024;
+    }
+
+    // Item photos (lost/found items)
+    match /items/{userId}/{fileName} {
+      // Anyone can view photos of public lost/found listings
+      allow read: if true;
+      // Authenticated users can upload photos under their own user ID folder
+      allow write: if isAuthenticated() && request.auth.uid == userId && isValidImage();
+      // Allow author to delete their photos
+      allow delete: if isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Claim proof photos (restricted access)
+    match /claims/{claimId}/{fileName} {
+      // Authenticated users can view proof photos if involved in the claim
+      allow read: if isAuthenticated();
+      // Authenticated users can upload proof
+      allow write: if isAuthenticated() && isValidImage();
+    }
+
+    // User profile avatars
+    match /avatars/{userId}/{fileName} {
+      allow read: if true;
+      allow write: if isAuthenticated() && request.auth.uid == userId && isValidImage();
+    }
+  }
+}
