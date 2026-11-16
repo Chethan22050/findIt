@@ -1,0 +1,15 @@
+# Netlify Configuration for FindIt (Vite + React SPA)
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "20"
+  NPM_FLAGS = "--no-audit --no-fund"
+
+# Single Page Application (SPA) redirect rule for React Router
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
